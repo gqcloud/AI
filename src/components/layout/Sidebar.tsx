@@ -5,7 +5,14 @@
 
 import React from 'react';
 import { Home, Radio, Disc, Library } from 'lucide-react';
-import { useUIStore, usePlayerStore, Song } from '../../store';
+import { useUIStore, usePlayerStore } from '../../store';
+
+interface Song {
+  id: string;
+  title: string;
+  artist: string;
+  coverArt: string;
+}
 
 const Sidebar: React.FC = () => {
   const { currentPage, setCurrentPage } = useUIStore();
@@ -41,7 +48,7 @@ const Sidebar: React.FC = () => {
     setCurrentPage(id as 'home' | 'browse' | 'library');
   };
 
-  const handleSongClick = (song: Song) => {
+  const handleSongClick = (song: any) => {
     play(song);
     addRecentPlayed(song);
   };
@@ -79,7 +86,7 @@ const Sidebar: React.FC = () => {
           最近播放
         </h3>
         <div className="space-y-2">
-          {recentPlayed.slice(0, 10).map((song) => (
+          {recentPlayed.slice(0, 10).map((song: any) => (
             <button
               key={song.id}
               onClick={() => handleSongClick(song)}
