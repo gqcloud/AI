@@ -1,20 +1,41 @@
 /**
- * App Component - 使用 store 版本
+ * App Component
+ * 主应用组件
  */
 
 import React from 'react';
 import { useUIStore } from './store';
 import Sidebar from './components/layout/Sidebar';
+import Player from './components/player/Player';
+import Home from './pages/Home/Home';
+import Browse from './pages/Browse/Browse';
+import Library from './pages/Library/Library';
 
 const App: React.FC = () => {
-  console.log('App component rendering...');
   const { currentPage } = useUIStore();
 
+  const renderPage = () => {
+    switch (currentPage) {
+      case 'home':
+        return <Home />;
+      case 'browse':
+        return <Browse />;
+      case 'library':
+        return <Library />;
+      default:
+        return <Home />;
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-primary text-white p-8">
-      <h1 className="text-2xl font-bold mb-4">Store 版本测试</h1>
-      <p className="text-lg mb-4">当前页面: {currentPage}</p>
-      <Sidebar />
+    <div className="min-h-screen flex flex-col bg-black text-white">
+      <div className="flex flex-1 overflow-hidden">
+        <Sidebar />
+        <main className="flex-1 overflow-y-auto pb-20 bg-gradient-to-b from-black to-neutral-900">
+          {renderPage()}
+        </main>
+      </div>
+      <Player />
     </div>
   );
 };

@@ -14,10 +14,8 @@ import {
   Repeat,
   Shuffle,
   Heart,
-  ListMusic,
 } from 'lucide-react';
 import { usePlayerStore } from '../../store';
-import { formatTime, usePlayer } from '../../hooks';
 
 const Player: React.FC = () => {
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -39,8 +37,6 @@ const Player: React.FC = () => {
     toggleLike,
   } = usePlayerStore();
 
-  const { handleSeek } = usePlayer(audioRef.current);
-
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
   const isLiked = currentSong ? likedSongs.has(currentSong.id) : false;
 
@@ -48,7 +44,10 @@ const Player: React.FC = () => {
     const rect = e.currentTarget.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const percentage = (x / rect.width) * 100;
-    handleSeek(percentage);
+    if (audioRef.current && duration) {
+      const newTime = (percentage / 100) * duration;
+      audioRef.current.currentTime = newTime / 1000;
+    }
   };
 
   const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -64,131 +63,128 @@ const Player: React.FC = () => {
 
   if (!currentSong) {
     return (
-      <div className="fixed bottom-0 left-0 right-0 h-20 bg-surface backdrop-blur-lg border-t border-border flex items-center justify-center">
-        <p className="text-text-tertiary">选择歌曲开始播放</p>
+      <div className="fixed bottom-0 left-0 right-0 h-24 glass border-t border-white/10 flex items-center justify-center">
+        <p className="text-white/40 text-lg">选择歌曲开始播放</p>
       </div>
     );
   }
 
   return (
     <>
-      {/* 音频元素 */}
       <audio ref={audioRef} />
 
-      {/* 播放器栏 */}
-      <div className="fixed bottom-0 left-0 right-0 h-20 bg-surface backdrop-blur-lg border-t border-border flex items-center px-6 gap-6">
+      <div className="fixed bottom-0 left-0 right-0 h-24 glass border-t border-white/10 flex items-center px-8 gap-8">
         {/* 歌曲信息 */}
-        <div className="flex items-center gap-4 w-80">
+        <div className="flex items-center gap-4 w-80 flex-shrink-0">
           <img
             src={currentSong.coverArt}
             alt={currentSong.title}
-            className="w-14 h-14 rounded object-cover"
+            className="w-16 h-16 rounded-xl shadow-lg object-cover"
           />
           <div className="flex-1 min-w-0">
-            <h4 className="font-medium truncate">{currentSong.title}</h4>
-            <p className="text-sm text-text-secondary truncate">
+            <h4 className="font-semibold truncate text-white text-base mb-1">
+              {currentSong.title}
+            </h4>
+            <p className="text-sm text-white/60 truncate">
               {currentSong.artist}
             </p>
           </div>
           <button
             onClick={() => currentSong && toggleLike(currentSong.id)}
-            className={`p-2 rounded transition-colors ${
+            className={`p-2.5 rounded-2xl transition-all duration-200 ${
               isLiked
-                ? 'text-accent'
-                : 'text-text-secondary hover:text-text-primary'
+                ? 'text-pink-500'
+                : 'text-white/40 hover:text-white/70'
             }`}
           >
-            <Heart size={20} className={isLiked ? 'fill-current' : ''} />
+            <Heart size={20} className={isLiked ? 'fill-current' : ''} strokeWidth={2.5} />
           </button>
         </div>
 
         {/* 播放控制 */}
-        <div className="flex-1 flex flex-col items-center gap-2">
-          {/* 控制按钮 */}
-          <div className="flex items-center gap-4">
+        <div className="flex-1 flex flex-col items-center gap-3 max-w-2xl">
+          <div className="flex items-center gap-5">
             <button
               onClick={handlePlaybackModeClick}
-              className={`p-2 rounded transition-colors ${
+              className={`p-2.5 rounded-2xl transition-all duration-200 ${
                 playbackMode !== 'normal'
-                  ? 'text-accent'
-                  : 'text-text-secondary hover:text-text-primary'
+                  ? 'text-pink-500'
+                  : 'text-white/40 hover:text-white/70'
               }`}
             >
               {playbackMode === 'shuffle' ? (
-                <Shuffle size={18} />
+                <Shuffle size={20} strokeWidth={2.5} />
               ) : (
-                <Repeat size={18} />
+                <Repeat size={20} strokeWidth={2.5} />
               )}
             </button>
             <button
               onClick={previous}
-              className="p-2 rounded text-text-primary hover:text-white transition-colors"
+              className="p-2.5 rounded-2xl text-white hover:text-white/80 transition-all duration-200"
             >
-              <SkipBack size={20} />
+              <SkipBack size={22} strokeWidth={2.5} />
             </button>
             <button
               onClick={togglePlay}
-              className="p-3 rounded-full bg-white text-primary hover:scale-105 transition-transform"
+              className="p-4 rounded-full bg-white text-black hover:scale-105 transition-all duration-200 shadow-xl shadow-white/20"
             >
               {isPlaying ? (
-                <Pause size={20} />
+                <Pause size={24} className="fill-current" />
               ) : (
-                <Play size={20} className="ml-1" />
+                <Play size={24} className="fill-current ml-0.5" strokeWidth={3} />
               )}
             </button>
             <button
               onClick={next}
-              className="p-2 rounded text-text-primary hover:text-white transition-colors"
+              className="p-2.5 rounded-2xl text-white hover:text-white/80 transition-all duration-200"
             >
-              <SkipForward size={20} />
+              <SkipForward size={22} strokeWidth={2.5} />
             </button>
           </div>
 
-          {/* 进度条 */}
-          <div className="w-full flex items-center gap-3">
-            <span className="text-xs text-text-secondary w-10 text-right">
-              {formatTime(currentTime)}
+          <div className="w-full flex items-center gap-4">
+            <span className="text-xs text-white/40 w-12 text-right font-medium tabular-nums">
+              {Math.floor(currentTime / 60000)}:{Math.floor((currentTime % 60000) / 1000).toString().padStart(2, '0')}
             </span>
             <div
               onClick={handleProgressClick}
-              className="flex-1 h-1 bg-primary-lighter rounded-full cursor-pointer relative group"
+              className="flex-1 h-1 bg-white/10 rounded-full cursor-pointer relative group"
             >
               <div
-                className="absolute top-0 left-0 h-full bg-white rounded-full transition-all"
+                className="absolute top-0 left-0 h-full bg-white rounded-full transition-all group-hover:bg-pink-500"
                 style={{ width: `${progress}%` }}
               />
               <div
-                className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
                 style={{ left: `${progress}%`, transform: 'translate(-50%, -50%)' }}
               />
             </div>
-            <span className="text-xs text-text-secondary w-10">
-              {formatTime(duration)}
+            <span className="text-xs text-white/40 w-12 font-medium tabular-nums">
+              {Math.floor(duration / 60000)}:{Math.floor((duration % 60000) / 1000).toString().padStart(2, '0')}
             </span>
           </div>
         </div>
 
-        {/* 音量和其他 */}
-        <div className="flex items-center gap-4 w-48 justify-end">
-          <div className="flex items-center gap-2">
-            <button
-              onClick={toggleMute}
-              className="p-2 rounded text-text-secondary hover:text-text-primary transition-colors"
-            >
-              {isMuted ? <VolumeX size={18} /> : <Volume2 size={18} />}
-            </button>
-            <input
-              type="range"
-              min="0"
-              max="100"
-              value={isMuted ? 0 : volume}
-              onChange={handleVolumeChange}
-              className="w-20 h-1 accent-white"
-            />
-          </div>
-          {/* <button className="p-2 rounded text-text-secondary hover:text-text-primary transition-colors">
-            <ListMusic size={18} />
-          </button> */}
+        {/* 音量 */}
+        <div className="flex items-center gap-3 w-48 flex-shrink-0 justify-end">
+          <button
+            onClick={toggleMute}
+            className="p-2.5 rounded-2xl text-white/40 hover:text-white/70 transition-all duration-200"
+          >
+            {isMuted ? (
+              <VolumeX size={20} strokeWidth={2.5} />
+            ) : (
+              <Volume2 size={20} strokeWidth={2.5} />
+            )}
+          </button>
+          <input
+            type="range"
+            min="0"
+            max="100"
+            value={isMuted ? 0 : volume}
+            onChange={handleVolumeChange}
+            className="w-28 h-1 bg-white/10 rounded-full cursor-pointer appearance-none"
+          />
         </div>
       </div>
     </>
