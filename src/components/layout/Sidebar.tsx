@@ -5,8 +5,7 @@
 
 import React from 'react';
 import { Home, Radio, Disc, Library } from 'lucide-react';
-import { useUIStore, usePlayerStore } from '../../store';
-import { mockArtists } from '../../api';
+import { useUIStore, usePlayerStore, Song } from '../../store';
 
 const Sidebar: React.FC = () => {
   const { currentPage, setCurrentPage } = useUIStore();
@@ -27,7 +26,6 @@ const Sidebar: React.FC = () => {
       id: 'radio',
       label: '电台',
       icon: Radio,
-      // placeholder for radio page
     },
     {
       id: 'library',
@@ -38,25 +36,22 @@ const Sidebar: React.FC = () => {
 
   const handleNavClick = (id: string) => {
     if (id === 'radio') {
-      // TODO: 实现电台页面
       return;
     }
     setCurrentPage(id as 'home' | 'browse' | 'library');
   };
 
-  const handleSongClick = (song: any) => {
+  const handleSongClick = (song: Song) => {
     play(song);
     addRecentPlayed(song);
   };
 
   return (
     <aside className="w-64 bg-primary-light border-r border-border flex flex-col">
-      {/* Logo */}
       <div className="p-6">
         <h1 className="text-2xl font-bold">Music</h1>
       </div>
 
-      {/* 导航 */}
       <nav className="px-3 mb-6">
         {navItems.map((item) => {
           const Icon = item.icon;
@@ -79,7 +74,6 @@ const Sidebar: React.FC = () => {
         })}
       </nav>
 
-      {/* 最近播放 */}
       <div className="flex-1 px-6 overflow-y-auto">
         <h3 className="text-xs font-semibold text-text-tertiary uppercase tracking-wider mb-3">
           最近播放

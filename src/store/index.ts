@@ -4,13 +4,153 @@
  */
 
 import { create } from 'zustand';
-import { Song, PlaybackMode } from '../types';
-import { mockSongs, mockAlbums, mockPlaylists } from '../api';
+
+// ==================== 类型定义 ====================
+
+/** 歌曲信息 */
+export interface Song {
+  id: string;
+  title: string;
+  artist: string;
+  album: string;
+  albumId: string;
+  duration: number;
+  coverArt: string;
+  audioUrl: string;
+  releaseDate?: string;
+  genre?: string[];
+  liked: boolean;
+  playCount: number;
+}
+
+/** 专辑信息 */
+export interface Album {
+  id: string;
+  title: string;
+  artist: string;
+  artistId: string;
+  coverArt: string;
+  releaseDate: string;
+  genre: string[];
+  songs: Song[];
+  duration: number;
+  songCount: number;
+}
+
+/** 播放列表/歌单 */
+export interface Playlist {
+  id: string;
+  title: string;
+  description?: string;
+  coverArt?: string;
+  songIds: string[];
+  songCount: number;
+  duration: number;
+  createdAt: string;
+  updatedAt: string;
+  liked: boolean;
+}
+
+/** 播放模式 */
+export enum PlaybackMode {
+  NORMAL = 'normal',
+  SINGLE = 'single',
+  SHUFFLE = 'shuffle',
+  REPEAT = 'repeat',
+}
+
+// ==================== Mock 数据 ====================
+
+const mockSongs: Song[] = [
+  {
+    id: '1',
+    title: 'Shape of You',
+    artist: 'Ed Sheeran',
+    album: '÷ (Divide)',
+    albumId: 'album-1',
+    duration: 234000,
+    coverArt: 'https://picsum.photos/300/300?random=1',
+    audioUrl: '',
+    releaseDate: '2017-01-06',
+    genre: ['Pop'],
+    liked: false,
+    playCount: 2500000000,
+  },
+  {
+    id: '2',
+    title: 'Blinding Lights',
+    artist: 'The Weeknd',
+    album: 'After Hours',
+    albumId: 'album-2',
+    duration: 200000,
+    coverArt: 'https://picsum.photos/300/300?random=2',
+    audioUrl: '',
+    releaseDate: '2020-03-20',
+    genre: ['Synth-pop', 'R&B'],
+    liked: true,
+    playCount: 3400000000,
+  },
+  {
+    id: '3',
+    title: 'Dance Monkey',
+    artist: 'Tones and I',
+    album: 'The Kids Are Coming',
+    albumId: 'album-3',
+    duration: 210000,
+    coverArt: 'https://picsum.photos/300/300?random=3',
+    audioUrl: '',
+    releaseDate: '2019-05-10',
+    genre: ['Electropop'],
+    liked: false,
+    playCount: 1900000000,
+  },
+];
+
+const mockAlbums: Album[] = [
+  {
+    id: 'album-1',
+    title: '÷ (Divide)',
+    artist: 'Ed Sheeran',
+    artistId: 'artist-1',
+    coverArt: 'https://picsum.photos/300/300?random=4',
+    releaseDate: '2017-01-06',
+    genre: ['Pop', 'Hip-hop'],
+    songs: mockSongs.slice(0, 1),
+    duration: 234000,
+    songCount: 12,
+  },
+  {
+    id: 'album-2',
+    title: 'After Hours',
+    artist: 'The Weeknd',
+    artistId: 'artist-2',
+    coverArt: 'https://picsum.photos/300/300?random=5',
+    releaseDate: '2020-03-20',
+    genre: ['Synth-pop', 'R&B'],
+    songs: mockSongs.slice(1, 2),
+    duration: 200000,
+    songCount: 14,
+  },
+];
+
+const mockPlaylists: Playlist[] = [
+  {
+    id: 'playlist-1',
+    title: '今日推荐',
+    description: '根据你的喜好推荐的歌曲',
+    coverArt: 'https://picsum.photos/300/300?random=6',
+    songIds: ['1', '2', '3'],
+    songCount: 30,
+    duration: 3600000,
+    createdAt: '2024-02-01T00:00:00Z',
+    updatedAt: '2024-02-04T00:00:00Z',
+    liked: true,
+  },
+];
 
 // ==================== 播放器 Store ====================
 
 interface PlayerStore {
-  // 播放状态
   currentSong: Song | null;
   isPlaying: boolean;
   currentTime: number;
@@ -21,17 +161,9 @@ interface PlayerStore {
   queue: Song[];
   currentIndex: number;
   history: Song[];
-
-  // 播放列表
   playlist: Song[];
-
-  // 喜欢的歌曲
   likedSongs: Set<string>;
-
-  // 最近播放
   recentPlayed: Song[];
-
-  // Actions
   play: (song: Song) => void;
   pause: () => void;
   togglePlay: () => void;
@@ -47,15 +179,11 @@ interface PlayerStore {
   clearQueue: () => void;
   toggleLike: (songId: string) => void;
   addRecentPlayed: (song: Song) => void;
-
-  // 获取下一首歌曲
   getNextSong: () => Song | null;
-  // 获取上一首歌曲
   getPreviousSong: () => Song | null;
 }
 
 export const usePlayerStore = create<PlayerStore>((set, get) => ({
-  // 初始状态
   currentSong: null,
   isPlaying: false,
   currentTime: 0,
@@ -67,24 +195,21 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
   currentIndex: -1,
   history: [],
   playlist: mockSongs,
-  likedSongs: new Set(['2']), // 模拟已喜欢的歌曲
+  likedSongs: new Set(['2']),
   recentPlayed: [],
 
-  // 播放歌曲
   play: (song: Song) => {
     set((state) => ({
       currentSong: song,
       isPlaying: true,
       currentTime: 0,
       duration: song.duration,
-      history: [song, ...state.history.slice(0, 19)], // 保持最近20首
+      history: [song, ...state.history.slice(0, 19)],
     }));
   },
 
-  // 暂停
   pause: () => set({ isPlaying: false }),
 
-  // 切换播放/暂停
   togglePlay: () => {
     const { currentSong, isPlaying } = get();
     if (currentSong) {
@@ -92,7 +217,6 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
     }
   },
 
-  // 下一首
   next: () => {
     const { currentIndex, queue, playbackMode, getNextSong } = get();
 
@@ -121,11 +245,9 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
     }
   },
 
-  // 上一首
   previous: () => {
     const { currentIndex, queue, currentTime } = get();
 
-    // 如果播放超过3秒，则重新播放当前歌曲
     if (currentTime > 3000) {
       set({ currentTime: 0 });
       return;
@@ -138,7 +260,6 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
         set({ currentIndex: currentIndex - 1 });
       }
     } else {
-      // 在第一首歌时，跳到最后一首
       const lastSong = queue[queue.length - 1];
       if (lastSong) {
         get().play(lastSong);
@@ -147,13 +268,10 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
     }
   },
 
-  // 跳转
   seek: (time: number) => set({ currentTime: time }),
 
-  // 设置音量
   setVolume: (volume: number) => set({ volume, isMuted: volume === 0 }),
 
-  // 切换静音
   toggleMute: () => {
     const { volume, isMuted } = get();
     if (isMuted) {
@@ -163,10 +281,8 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
     }
   },
 
-  // 设置播放模式
   setPlaybackMode: (mode: PlaybackMode) => set({ playbackMode: mode }),
 
-  // 设置播放队列
   setQueue: (songs: Song[], startIndex = 0) => {
     const song = songs[startIndex];
     set({
@@ -178,14 +294,12 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
     }
   },
 
-  // 添加到队列
   addToQueue: (song: Song) => {
     set((state) => ({
       queue: [...state.queue, song],
     }));
   },
 
-  // 从队列移除
   removeFromQueue: (index: number) => {
     set((state) => ({
       queue: state.queue.filter((_, i) => i !== index),
@@ -193,10 +307,8 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
     }));
   },
 
-  // 清空队列
   clearQueue: () => set({ queue: [], currentIndex: -1, currentSong: null, isPlaying: false }),
 
-  // 切换喜欢状态
   toggleLike: (songId: string) => {
     set((state) => {
       const likedSongs = new Set(state.likedSongs);
@@ -208,7 +320,6 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
       return { likedSongs };
     });
 
-    // 更新当前歌曲的喜欢状态
     set((state) => {
       if (state.currentSong?.id === songId) {
         return {
@@ -219,10 +330,8 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
     });
   },
 
-  // 添加到最近播放
   addRecentPlayed: (song: Song) => {
     set((state) => {
-      // 移除已存在的，然后添加到开头
       const filtered = state.recentPlayed.filter((s) => s.id !== song.id);
       return {
         recentPlayed: [song, ...filtered.slice(0, 19)],
@@ -230,7 +339,6 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
     });
   },
 
-  // 获取下一首
   getNextSong: () => {
     const { currentIndex, queue, playbackMode } = get();
 
@@ -252,7 +360,6 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
     return null;
   },
 
-  // 获取上一首
   getPreviousSong: () => {
     const { currentIndex, queue } = get();
 
@@ -269,16 +376,9 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
 // ==================== UI Store ====================
 
 interface UIStore {
-  // 侧边栏状态
   sidebarOpen: boolean;
-
-  // 当前页面
   currentPage: 'home' | 'browse' | 'library';
-
-  // 播放列表抽屉
   queueDrawerOpen: boolean;
-
-  // Actions
   toggleSidebar: () => void;
   setCurrentPage: (page: 'home' | 'browse' | 'library') => void;
   toggleQueueDrawer: () => void;
@@ -299,19 +399,17 @@ export const useUIStore = create<UIStore>((set) => ({
 // ==================== Data Store ====================
 
 interface DataStore {
-  albums: typeof mockAlbums;
-  playlists: typeof mockPlaylists;
-  artists: typeof mockSongs;
-
-  // Actions
-  setAlbums: (albums: typeof mockAlbums) => void;
-  setPlaylists: (playlists: typeof mockPlaylists) => void;
+  albums: Album[];
+  playlists: Playlist[];
+  songs: Song[];
+  setAlbums: (albums: Album[]) => void;
+  setPlaylists: (playlists: Playlist[]) => void;
 }
 
 export const useDataStore = create<DataStore>((set) => ({
   albums: mockAlbums,
   playlists: mockPlaylists,
-  artists: mockSongs,
+  songs: mockSongs,
 
   setAlbums: (albums) => set({ albums }),
   setPlaylists: (playlists) => set({ playlists }),
