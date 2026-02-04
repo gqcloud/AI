@@ -6,12 +6,13 @@
 import React from 'react';
 import AlbumCard from '../../components/common/AlbumCard';
 import { useDataStore, usePlayerStore } from '../../store';
+import { Album } from '../../types';
 
 const Library: React.FC = () => {
   const { albums, playlists } = useDataStore();
   const { setQueue } = usePlayerStore();
 
-  const handlePlayAlbum = (album: any) => {
+  const handlePlayAlbum = (album: Album) => {
     setQueue(album.songs, 0);
   };
 

@@ -14,6 +14,7 @@ import {
   FilterOptions,
   SortOption,
   PlaybackMode,
+  Category,
 } from '../types';
 
 // ==================== Base API Configuration ====================
@@ -372,16 +373,6 @@ export async function getCategories(): Promise<ApiResponse<Category[]>> {
     success: true,
     data: [],
   };
-}
-
-// ==================== 接口类型导出 ====================
-
-export interface Category {
-  id: string;
-  name: string;
-  icon?: string;
-  description: string;
-  color: string;
 }
 
 // ==================== Mock Data ====================
