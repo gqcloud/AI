@@ -37,3 +37,13 @@ export interface Artist {
   topSongs: Song[];
   albums: Album[];
 }
+
+export interface Comment {
+  id: string;
+  songId: string;
+  userId: string;
+  userName: string;
+  content: string;
+  createdAt: string;
+  likes: number;
+}
